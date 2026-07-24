@@ -199,12 +199,15 @@ class CurveIndexer {
     return ts;
   }
 
-  /** Reset the index when the chain (genesis) OR the launchpad address changes —
-   * both invalidate everything previously indexed. */
+  /** Reset the index when the chain OR the launchpad address changes — both
+   * invalidate everything previously indexed. Keyed on chain id (NOT the
+   * genesis hash: Stable's RPC prunes block 0 and getBlock(0) throws). A
+   * same-id anvil restart reuses the key — wipe .data/curve-pglite manually
+   * for a fresh local chain. */
   private async resetIfStale(db: CurveDb): Promise<void> {
     if (this.resetChecked) return;
-    const genesis = (await this.client.getBlock({ blockNumber: 0n })).hash ?? "";
-    const key = `${genesis}:${this.launchpad.toLowerCase()}`;
+    const chainId = await this.client.getChainId();
+    const key = `${chainId}:${this.launchpad.toLowerCase()}`;
     const stored = await getMeta(db, "index_key");
     if (stored && stored !== key) {
       console.warn("[curve-indexer] chain or launchpad changed — resetting index");
