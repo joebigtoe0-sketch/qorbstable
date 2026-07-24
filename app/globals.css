@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #e2e8f0;
+  --accent: #20b2aa;
+  --muted: #94a3b8;
+}
+
+/* QORB backdrop: the qorb.fun 135° navy gradient. */
+body {
+  color: var(--foreground);
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)
+    fixed;
+  background-color: var(--background);
+  min-height: 100vh;
+}
+
+.dark body {
+  color: #e2e8f0;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)
+    fixed;
+  background-color: #0a0a0a;
+}
+
+::selection {
+  background: rgba(32, 178, 170, 0.35);
+  color: #ffffff;
+}
+
+/* Thin, dark scrollbars to match the shell */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #263455 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #263455;
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
