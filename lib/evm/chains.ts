@@ -66,7 +66,13 @@ const DEPLOYMENTS: Record<
     }
   | undefined
 > = {
-  // stable: { launchpad: "0x…", router: "0x…", usdt0: STABLE_MAINNET.usdt0, startBlock: "0" },
+  // Deployed 2026-07-24 (block 32955608). Locker: 0xB69ce2958E93B99b01f69d81AF29Ca8cDf9445Ae
+  stable: {
+    launchpad: "0xB63a05e220E6a6D4BE8bE23b84E2a506537B8633",
+    router: "0x1CcB2F4c6dA5EB448c2ef84EF235919f7270C646",
+    usdt0: "0x779Ded0c9e1022225f8E0630b35a9b54bE713736",
+    startBlock: "32955608",
+  },
 };
 
 function chainKey(): string {

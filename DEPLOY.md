@@ -43,9 +43,21 @@ anvil runs only.
 
 ## Current deployments
 
-| Env | Contracts | Notes |
+| Env | Contract | Address |
 | --- | --- | --- |
-| Stable mainnet (988) | _not deployed yet_ | Fill `DEPLOYMENTS.stable` in `lib/evm/chains.ts` after deploying. |
+| Stable mainnet (988) | StableLaunchpad | `0xB63a05e220E6a6D4BE8bE23b84E2a506537B8633` |
+| | StableLocker | `0xB69ce2958E93B99b01f69d81AF29Ca8cDf9445Ae` |
+| | StableRouter | `0x1CcB2F4c6dA5EB448c2ef84EF235919f7270C646` |
+
+Deployed 2026-07-24 at block 32955608; owner/deployer
+`0x52592d4598bF309dd7E6Fc1900749E3e206c0D8B`, fee recipient (treasury)
+`0xB76219577848009daF528ff21088aaf01C931156`. First launch smoke-tested
+on-chain: First Light (FIRST) `0x9A0cf14A288c2Fa34354403c4a775Eb816BA5B1E`,
+pool `0xfa2954F076316A9A46A77879cC34E8642aCB51a5`.
+
+> Gotcha that bricked the first attempt: foundry auto-loads `evm/.env`, and a
+> stale Robinhood-era `UNIV3_FACTORY` there overrode the script default. Keep
+> `evm/.env` free of address overrides; pass them explicitly per command.
 
 ## 1. Local dev (three terminals)
 
