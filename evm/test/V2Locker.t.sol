@@ -54,68 +54,10 @@ contract V2LockerTest is BaseSetup {
         assertGt(usdt0.balanceOf(creator) - creatorUsdBefore, 0, "rewards arrive as USDT0");
     }
 
-    function test_LPGrow_CollectReinvestsSeventyPercent() public {
-        address token = _launch(StableLaunchpad.Flavor.LPGrow);
-        _buy(token, 2_000e6, alice);
-        _sell(token, StableLaunchToken(token).balanceOf(alice) / 2, alice);
-
-        uint128 liqBefore = _positionLiquidity(token);
-        uint256 creatorWethBefore = usdt0.balanceOf(creator);
-
-        locker.collect(token);
-
-        assertGt(_positionLiquidity(token), liqBefore, "liquidity deepened");
-        assertGt(usdt0.balanceOf(creator), creatorWethBefore, "creator still paid the payout share");
-    }
-
-    function test_SuperLP_BuyTaxLandsOnLockerAndCompounds() public {
-        address token = _launch(StableLaunchpad.Flavor.SuperLP);
-
-        uint256 out = _buy(token, 2_000e6, alice);
-        uint256 taxHeld = StableLaunchToken(token).balanceOf(address(locker));
-        // Tax is 5% of the gross pool output; alice got the other 95%.
-        assertApproxEqRel(taxHeld, out * 500 / 9500, 1e15, "5% buy tax skimmed to locker");
-
-        // collect() swap-and-liquifies the tax: half sold for USDT0, paired,
-        // minted into the locked position — no sells or fees required.
-        uint128 liqBefore = _positionLiquidity(token);
-        locker.collect(token);
-        assertGt(_positionLiquidity(token), liqBefore, "tax compounds into locked LP");
-        assertLt(
-            StableLaunchToken(token).balanceOf(address(locker)),
-            taxHeld,
-            "tax balance consumed by compounding"
-        );
-    }
-
-    function test_SuperLP_PoolFeesStillSplitFiftyFifty() public {
-        address token = _launch(StableLaunchpad.Flavor.SuperLP);
-        _buy(token, 2_000e6, alice);
-        _sell(token, StableLaunchToken(token).balanceOf(alice) / 2, alice);
-
-        uint256 creatorWethBefore = usdt0.balanceOf(creator);
-        uint256 platformWethBefore = usdt0.balanceOf(platform);
-
-        locker.collect(token);
-
-        uint256 creatorGain = usdt0.balanceOf(creator) - creatorWethBefore;
-        uint256 platformGain = usdt0.balanceOf(platform) - platformWethBefore;
-        assertGt(creatorGain, 0, "creator earns USDT0 fees");
-        assertApproxEqAbs(creatorGain, platformGain, 2, "fees split 50/50, tax handled separately");
-    }
-
-    function test_SuperLP_SellsAreNeverTaxed() public {
-        address token = _launch(StableLaunchpad.Flavor.SuperLP);
-        uint256 out = _buy(token, 1_000e6, alice);
-
-        uint256 lockerBefore = StableLaunchToken(token).balanceOf(address(locker));
-        _sell(token, out / 2, alice);
-        assertEq(
-            StableLaunchToken(token).balanceOf(address(locker)),
-            lockerBefore,
-            "sell moved no tax to the locker"
-        );
-    }
+    // The LP-Grow / Super-LP flavor mechanics remain in the locker for a
+    // future launchpad version, but the live launchpad only mints Standard
+    // coins (see test_Launch_NonStandardFlavorsRevert) — so their scenario
+    // tests were retired with the flavor restriction.
 
     function test_Collect_PermissionlessAndIdempotent() public {
         address token = _launch(StableLaunchpad.Flavor.Standard);

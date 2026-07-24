@@ -38,15 +38,6 @@ contract V2RouterTest is BaseSetup {
         assertGt(usdOut, 900e6, "round trip keeps most value");
     }
 
-    function test_Router_SuperLPBuyReturnsNetOfTax() public {
-        address token = _launch(StableLaunchpad.Flavor.SuperLP);
-
-        vm.prank(alice);
-        uint256 got = appRouter.buyExactUsd(token, 10_000, 1_000e6, 0, alice);
-        assertEq(StableLaunchToken(token).balanceOf(alice), got, "returned amount is net of 5% tax");
-        assertGt(StableLaunchToken(token).balanceOf(address(locker)), 0, "tax skimmed");
-    }
-
     function test_Router_SlippageGuards() public {
         address token = _launch(StableLaunchpad.Flavor.Standard);
         vm.prank(alice);

@@ -8,9 +8,8 @@ import {
   useWriteContract,
 } from "wagmi";
 
-import { stableLaunchpadAbi } from "@/lib/evm/abi/stableLaunchpad";
+import { stableLaunchTokenAbi } from "@/lib/evm/abi/stableLaunchToken";
 import { stableLockerAbi } from "@/lib/evm/abi/stableLocker";
-import { launchpadAddress } from "@/lib/evm/chains";
 import type { CurveTokenJson } from "@/types/curve";
 
 /**
@@ -23,16 +22,17 @@ import type { CurveTokenJson } from "@/types/curve";
  */
 export function CreatorRewards({ token }: { token: CurveTokenJson }) {
   const { address: account } = useAccount();
-  const launchpad = launchpadAddress();
   const [collected, setCollected] = useState(false);
 
   const isCreator = Boolean(
     account && account.toLowerCase() === token.creator.toLowerCase()
   );
 
+  // Each token stores its own locker (immutable) — correct even for coins
+  // launched by a retired launchpad generation.
   const { data: locker } = useReadContract({
-    abi: stableLaunchpadAbi,
-    address: launchpad,
+    abi: stableLaunchTokenAbi,
+    address: token.address as `0x${string}`,
     functionName: "locker",
     query: { enabled: isCreator },
   });

@@ -65,15 +65,22 @@ const DEPLOYMENTS: Record<
       router: `0x${string}`;
       usdt0: `0x${string}`;
       startBlock: string;
+      /** Retired launchpads whose tokens stay indexed/visible. startBlock
+       * must cover the OLDEST of these; adding one later needs a DB re-index
+       * (the indexer resets automatically when the primary changes). */
+      legacyLaunchpads?: `0x${string}`[];
     }
   | undefined
 > = {
-  // Deployed 2026-07-24 (block 32955608). Locker: 0xB69ce2958E93B99b01f69d81AF29Ca8cDf9445Ae
+  // v2 launchpad (Standard-only, contract-enforced) deployed 2026-07-25 at
+  // block 32984191; locker 0x0eDb3514…5dF87D. v1 launchpad kept as legacy so
+  // its tokens stay indexed. Router is launchpad-independent and unchanged.
   stable: {
-    launchpad: "0xB63a05e220E6a6D4BE8bE23b84E2a506537B8633",
+    launchpad: "0xb44a8a84257a56398465D717ca55859Ac742498a",
     router: "0x1CcB2F4c6dA5EB448c2ef84EF235919f7270C646",
     usdt0: "0x779Ded0c9e1022225f8E0630b35a9b54bE713736",
     startBlock: "32955608",
+    legacyLaunchpads: ["0xB63a05e220E6a6D4BE8bE23b84E2a506537B8633"],
   },
 };
 
@@ -123,6 +130,11 @@ export function usdt0Address(): `0x${string}` {
   throw new Error(
     "No USDT0 for this chain — set NEXT_PUBLIC_USDT0_ADDRESS (local/anvil runs need it)"
   );
+}
+
+/** Retired launchpads whose tokens the indexer keeps watching. */
+export function legacyLaunchpadAddresses(): `0x${string}`[] {
+  return DEPLOYMENTS[chainKey()]?.legacyLaunchpads ?? [];
 }
 
 /** First block the indexer scans on a fresh database. */

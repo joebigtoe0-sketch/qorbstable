@@ -20,3 +20,6 @@ evm/out
 evm/cache
 evm/broadcast
 evm/lib
+
+# BD/outreach drafts — not for the public repo
+outreach/

@@ -78,6 +78,9 @@ const MIGRATIONS = [
   // Trades executed by the protocol itself (tax-compounding cranks) — kept for
   // volume accuracy, hidden from the live trade feeds.
   `ALTER TABLE curve_trades ADD COLUMN IF NOT EXISTS internal BOOLEAN NOT NULL DEFAULT FALSE`,
+  // Which launchpad deployed the token (supports legacy launchpads staying
+  // visible after a redeploy; empty = the primary at index time).
+  `ALTER TABLE curve_tokens ADD COLUMN IF NOT EXISTS launchpad TEXT NOT NULL DEFAULT ''`,
   // Locker fee collections + tax compounds, for the analytics page.
   `CREATE TABLE IF NOT EXISTS curve_fee_events (
      tx_hash        TEXT NOT NULL,

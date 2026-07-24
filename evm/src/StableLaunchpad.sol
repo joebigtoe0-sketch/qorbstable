@@ -114,6 +114,11 @@ contract StableLaunchpad is Ownable, ReentrancyGuard {
         uint256 devBuyUsd,
         uint256 minDevBuyTokens
     ) external nonReentrant returns (address token) {
+        // Clean coins only: every token this launchpad can ever deploy has 0%
+        // tax and no reinvest hooks — enforced here, not in the UI, so no
+        // direct contract call can mint a taxed token under our name. The
+        // LP-growing flavors ship with a future launchpad version instead.
+        require(flavor == Flavor.Standard, "Launchpad: standard only");
         require(bytes(name).length > 0 && bytes(symbol).length > 0, "Launchpad: name/symbol");
 
         (uint16 taxBps, uint16 reinvestBps) = _flavorParams(flavor);

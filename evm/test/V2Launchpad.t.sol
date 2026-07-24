@@ -58,13 +58,28 @@ contract V2LaunchpadTest is BaseSetup {
     function test_Launch_VanityAddressIsPredictable() public {
         bytes32 salt = bytes32(uint256(0xC00));
         address predicted = launchpad.predictTokenAddress(
-            "Steed Coin", "STEED", "ipfs://steed-metadata", StableLaunchpad.Flavor.LPGrow, salt, creator
+            "Steed Coin", "STEED", "ipfs://steed-metadata", StableLaunchpad.Flavor.Standard, salt, creator
         );
         vm.prank(creator);
         address token = launchpad.launchToken(
-            "Steed Coin", "STEED", "ipfs://steed-metadata", StableLaunchpad.Flavor.LPGrow, salt, 0, 0
+            "Steed Coin", "STEED", "ipfs://steed-metadata", StableLaunchpad.Flavor.Standard, salt, 0, 0
         );
         assertEq(token, predicted, "CREATE2 address matches prediction");
+    }
+
+    /// Clean coins only: the tax/reinvest flavors are contract-level blocked,
+    /// so no direct call can mint a taxed token through this launchpad.
+    function test_Launch_NonStandardFlavorsRevert() public {
+        vm.startPrank(creator);
+        vm.expectRevert(bytes("Launchpad: standard only"));
+        launchpad.launchToken(
+            "Steed Coin", "STEED", "", StableLaunchpad.Flavor.LPGrow, bytes32(uint256(1)), 0, 0
+        );
+        vm.expectRevert(bytes("Launchpad: standard only"));
+        launchpad.launchToken(
+            "Steed Coin", "STEED", "", StableLaunchpad.Flavor.SuperLP, bytes32(uint256(2)), 0, 0
+        );
+        vm.stopPrank();
     }
 
     function test_Launch_RevertsWhenPoolPreCreated() public {
@@ -101,12 +116,12 @@ contract V2LaunchpadTest is BaseSetup {
     }
 
     function test_Launch_MetadataReadableFromToken() public {
-        address token = _launch(StableLaunchpad.Flavor.SuperLP);
+        address token = _launch(StableLaunchpad.Flavor.Standard);
         StableLaunchToken t = StableLaunchToken(token);
         assertEq(t.name(), "Steed Coin");
         assertEq(t.symbol(), "STEED");
         assertEq(t.metadataURI(), "ipfs://steed-metadata");
         assertEq(t.creator(), creator);
-        assertEq(t.buyTaxBps(), launchpad.SUPER_LP_BUY_TAX_BPS());
+        assertEq(t.buyTaxBps(), 0, "standard coins are always tax-free");
     }
 }

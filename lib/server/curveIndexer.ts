@@ -16,6 +16,7 @@ import {
   indexerStartBlock,
   isEvmConfigured,
   launchpadAddress,
+  legacyLaunchpadAddresses,
 } from "@/lib/evm/chains";
 import { cleanEnv } from "@/lib/cleanEnv";
 import { curveDb, getMeta, setMeta, type CurveDb } from "@/lib/server/curveDb";
@@ -126,7 +127,10 @@ function priceFromSqrt(sqrtPriceX96: bigint, tokenIsToken0: boolean): number {
 class CurveIndexer {
   private client: PublicClient;
   private launchpad: Address;
-  private locker: Address | null = null;
+  /** Primary + retired launchpads — all watched for TokenLaunched. */
+  private launchpads: Address[];
+  private lockers = new Map<string, Address>(); // launchpad -> its locker
+  private tokenLaunchpad = new Map<string, Address>(); // token -> its launchpad
   private tokens = new Set<string>();
   private pools = new Map<string, PoolInfo>(); // pool -> token info
   private loaded = false;
@@ -138,6 +142,7 @@ class CurveIndexer {
   constructor() {
     this.client = createPublicClient({ chain: activeChain(), transport: http() });
     this.launchpad = launchpadAddress();
+    this.launchpads = [this.launchpad, ...legacyLaunchpadAddresses()];
   }
 
   private lastHeartbeat = 0;
@@ -173,15 +178,28 @@ class CurveIndexer {
     );
   }
 
-  private async lockerAddress(): Promise<Address> {
-    if (!this.locker) {
-      this.locker = (await this.client.readContract({
-        address: this.launchpad,
+  /** Locker of a specific launchpad (each launchpad deploys its own). */
+  private async lockerOf(launchpad: Address): Promise<Address> {
+    const key = launchpad.toLowerCase();
+    let locker = this.lockers.get(key);
+    if (!locker) {
+      locker = (await this.client.readContract({
+        address: launchpad,
         abi: stableLaunchpadAbi,
         functionName: "locker",
       })) as Address;
+      this.lockers.set(key, locker);
     }
-    return this.locker;
+    return locker;
+  }
+
+  private async allLockers(): Promise<Address[]> {
+    return Promise.all(this.launchpads.map((l) => this.lockerOf(l)));
+  }
+
+  /** The launchpad that deployed `token` (primary if unknown). */
+  private launchpadOf(token: string): Address {
+    return this.tokenLaunchpad.get(token.toLowerCase()) ?? this.launchpad;
   }
 
   private async load(db: CurveDb): Promise<void> {
@@ -198,14 +216,17 @@ class CurveIndexer {
       pool: string;
       is_token0: boolean;
       flavor: number;
-    }>("SELECT address, pool, is_token0, flavor FROM curve_tokens WHERE pool != ''");
+      launchpad: string;
+    }>("SELECT address, pool, is_token0, flavor, launchpad FROM curve_tokens WHERE pool != ''");
     for (const row of res.rows) {
-      this.tokens.add(row.address.toLowerCase());
+      const addr = row.address.toLowerCase();
+      this.tokens.add(addr);
       this.pools.set(row.pool.toLowerCase(), {
-        token: row.address.toLowerCase(),
+        token: addr,
         isToken0: Boolean(row.is_token0),
         flavor: Number(row.flavor),
       });
+      if (row.launchpad) this.tokenLaunchpad.set(addr, row.launchpad as Address);
     }
     this.loaded = true;
   }
@@ -306,10 +327,11 @@ class CurveIndexer {
   }
 
   private async processRange(db: CurveDb, fromBlock: bigint, toBlock: bigint): Promise<void> {
-    const locker = await this.lockerAddress();
+    const lockers = await this.allLockers();
+    const lockerSet = new Set(lockers.map((l) => l.toLowerCase()));
 
     const launchedLogs = (await this.client.getLogs({
-      address: this.launchpad,
+      address: this.launchpads,
       event: launchedEvent as never,
       fromBlock,
       toBlock,
@@ -344,7 +366,7 @@ class CurveIndexer {
         : [];
 
     const lockerLogs = (await this.client.getLogs({
-      address: locker,
+      address: lockers,
       events: lockerEvents as never,
       fromBlock,
       toBlock,
@@ -357,7 +379,7 @@ class CurveIndexer {
     });
 
     for (const log of all) {
-      if (log.eventName === "Swap") await this.onSwap(db, log, locker);
+      if (log.eventName === "Swap") await this.onSwap(db, log, lockerSet);
       else if (log.eventName === "Transfer") await this.onTransfer(db, log);
       else await this.onLockerEvent(db, log);
     }
@@ -369,6 +391,7 @@ class CurveIndexer {
     if (this.tokens.has(token) || HIDDEN_TOKENS.has(token)) return;
     const pool = (args.pool as string).toLowerCase();
     const flavor = Number(args.flavor ?? 0);
+    const sourceLaunchpad = log.address; // the (possibly legacy) emitter
     const ts = await this.tsOf(log.blockNumber ?? 0n);
 
     // Strings live on the token contract, not in the event. buyTaxBps rides
@@ -390,8 +413,8 @@ class CurveIndexer {
     await db.query(
       `INSERT INTO curve_tokens
          (address, creator, flavor, name, symbol, metadata_uri, v_eth, v_token,
-          pool, is_token0, created_block, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, 0, 0, $7, $8, $9, $10)
+          pool, is_token0, created_block, created_at, launchpad)
+       VALUES ($1, $2, $3, $4, $5, $6, 0, 0, $7, $8, $9, $10, $11)
        ON CONFLICT (address) DO NOTHING`,
       [
         token,
@@ -404,10 +427,12 @@ class CurveIndexer {
         isToken0,
         (log.blockNumber ?? 0n).toString(),
         ts,
+        sourceLaunchpad.toLowerCase(),
       ]
     );
     this.tokens.add(token);
     this.pools.set(pool, { token, isToken0, flavor });
+    this.tokenLaunchpad.set(token, sourceLaunchpad);
     this.dirty.add(token);
     void fetchMetadata(db, token, uri ?? "");
     // Publish the token's source on stablescan so security scanners read real
@@ -433,7 +458,7 @@ class CurveIndexer {
     ).toLowerCase();
   }
 
-  private async onSwap(db: CurveDb, log: AnyLog, locker: Address): Promise<void> {
+  private async onSwap(db: CurveDb, log: AnyLog, lockerSet: Set<string>): Promise<void> {
     const info = this.pools.get(log.address.toLowerCase());
     if (!info) return;
     const args = log.args ?? {};
@@ -449,7 +474,7 @@ class CurveIndexer {
     const tokenAmount = tokenDelta < 0n ? -tokenDelta : tokenDelta;
     const price = priceFromSqrt(sqrtPriceX96, info.isToken0);
     const recipient = ((args.recipient as string) ?? ZERO).toLowerCase();
-    const internal = recipient === locker.toLowerCase();
+    const internal = lockerSet.has(recipient);
     const ts = await this.tsOf(log.blockNumber ?? 0n);
 
     await db.query(
@@ -563,7 +588,7 @@ class CurveIndexer {
     for (const token of this.dirty) {
       try {
         const [usdPrincipal, , graduated] = (await this.client.readContract({
-          address: this.launchpad,
+          address: this.launchpadOf(token),
           abi: stableLaunchpadAbi,
           functionName: "graduationStatus",
           args: [token as Address],
@@ -589,7 +614,6 @@ class CurveIndexer {
     const minTax = BigInt(
       cleanEnv(process.env.KEEPER_MIN_TAX_TOKENS) ?? "1000000000000000000000000" // 1M tokens
     );
-    const locker = await this.lockerAddress();
 
     for (const token of this.dirty) {
       const info = [...this.pools.values()].find((p) => p.token === token);
@@ -597,6 +621,7 @@ class CurveIndexer {
       const last = this.lastCrank.get(token) ?? 0;
       if (Date.now() - last < CRANK_COOLDOWN_MS) continue;
       try {
+        const locker = await this.lockerOf(this.launchpadOf(token));
         const taxBal = (await this.client.readContract({
           address: token as Address,
           abi: stableLaunchTokenAbi,

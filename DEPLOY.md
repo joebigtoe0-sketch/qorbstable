@@ -45,19 +45,25 @@ anvil runs only.
 
 | Env | Contract | Address |
 | --- | --- | --- |
-| Stable mainnet (988) | StableLaunchpad | `0xB63a05e220E6a6D4BE8bE23b84E2a506537B8633` |
-| | StableLocker | `0xB69ce2958E93B99b01f69d81AF29Ca8cDf9445Ae` |
+| Stable mainnet (988) | StableLaunchpad **v2** (Standard-only) | `0xb44a8a84257a56398465D717ca55859Ac742498a` |
+| | StableLocker v2 | `0x0eDb35147181786EEDC31E8d810dE5665A5dF87D` |
 | | StableRouter | `0x1CcB2F4c6dA5EB448c2ef84EF235919f7270C646` |
+| | StableLaunchpad v1 (legacy, retired) | `0xB63a05e220E6a6D4BE8bE23b84E2a506537B8633` |
+| | StableLocker v1 (legacy) | `0xB69ce2958E93B99b01f69d81AF29Ca8cDf9445Ae` |
 
-Deployed 2026-07-24 at block 32955608; owner/deployer
-`0x52592d4598bF309dd7E6Fc1900749E3e206c0D8B`, fee recipient (treasury)
-`0xB76219577848009daF528ff21088aaf01C931156`. First launch smoke-tested
-on-chain: First Light (FIRST) `0x9A0cf14A288c2Fa34354403c4a775Eb816BA5B1E`,
-pool `0xfa2954F076316A9A46A77879cC34E8642aCB51a5`.
+v2 deployed 2026-07-25 at block 32984191: `launchToken` now enforces
+`flavor == Standard` at the contract level, so no direct call can mint a
+taxed token. v1 (block 32955608) is retired but its tokens stay indexed via
+`legacyLaunchpads` in `lib/evm/chains.ts` — the indexer watches every listed
+launchpad and records each token's origin (`curve_tokens.launchpad`); fee
+collects go to the token's own locker (tokens store it as an immutable).
+Owner/deployer `0x52592d4598bF309dd7E6Fc1900749E3e206c0D8B`, fee recipient
+(treasury) `0xB76219577848009daF528ff21088aaf01C931156`.
 
-> Gotcha that bricked the first attempt: foundry auto-loads `evm/.env`, and a
-> stale Robinhood-era `UNIV3_FACTORY` there overrode the script default. Keep
-> `evm/.env` free of address overrides; pass them explicitly per command.
+> Gotcha that bricked the very first attempt: foundry auto-loads `evm/.env`,
+> and a stale Robinhood-era `UNIV3_FACTORY` there overrode the script
+> default. Keep `evm/.env` free of address overrides; pass them explicitly
+> per command, and check `launchContext()` after every deploy.
 
 ## 1. Local dev (three terminals)
 
