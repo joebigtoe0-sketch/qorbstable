@@ -1,5 +1,6 @@
 import { encodeAbiParameters } from "viem";
 
+import { cleanEnv } from "@/lib/cleanEnv";
 import { activeChain } from "@/lib/evm/chains";
 
 import stdJson from "./stableLaunchToken.stdjson.json";
@@ -28,7 +29,7 @@ const ATTEMPT_DELAYS_MS = [45_000, 180_000, 600_000];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function apiKey(): string | null {
-  return process.env.ETHERSCAN_API_KEY?.trim() || null;
+  return cleanEnv(process.env.ETHERSCAN_API_KEY) ?? null;
 }
 
 async function isVerified(key: string, token: string): Promise<boolean> {

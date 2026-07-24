@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { encodeAbiParameters, keccak256 } from "viem";
 
+import { cleanEnv } from "@/lib/cleanEnv";
+
 import { stableLaunchTokenBytecode } from "@/lib/evm/abi/stableLaunchTokenBytecode";
 import { isEvmConfigured, launchpadAddress } from "@/lib/evm/chains";
 
@@ -14,7 +16,7 @@ export const runtime = "nodejs";
  * token on the predicted address. Falls back to a random salt (vanity: false)
  * if the budget runs out. Override the suffix with VANITY_SUFFIX (hex only). */
 
-const SUFFIX = (process.env.VANITY_SUFFIX ?? "5b1e").toLowerCase();
+const SUFFIX = (cleanEnv(process.env.VANITY_SUFFIX) ?? "5b1e").toLowerCase();
 const MAX_ITERATIONS = 400_000;
 const TIME_BUDGET_MS = 9_000;
 

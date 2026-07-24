@@ -1,5 +1,7 @@
 import { defineChain, type Chain } from "viem";
 
+import { cleanEnv } from "@/lib/cleanEnv";
+
 /**
  * Stable Chain mainnet (chain 988). Native gas is USDT0; the canonical ERC20
  * interface to it (6 decimals) is what every pool pairs against.
@@ -12,7 +14,7 @@ export const stableChain = defineChain({
   rpcUrls: {
     default: {
       http: [
-        process.env.NEXT_PUBLIC_STABLE_RPC_URL ?? "https://rpc.stable.xyz",
+        cleanEnv(process.env.NEXT_PUBLIC_STABLE_RPC_URL) ?? "https://rpc.stable.xyz",
       ],
     },
   },
@@ -31,7 +33,7 @@ export const localAnvil = defineChain({
   nativeCurrency: { name: "USDT0", symbol: "USDT0", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_LOCAL_RPC_URL ?? "http://127.0.0.1:8545"],
+      http: [cleanEnv(process.env.NEXT_PUBLIC_LOCAL_RPC_URL) ?? "http://127.0.0.1:8545"],
     },
   },
   testnet: true,
@@ -76,7 +78,7 @@ const DEPLOYMENTS: Record<
 };
 
 function chainKey(): string {
-  return process.env.NEXT_PUBLIC_EVM_CHAIN?.trim() || "local";
+  return cleanEnv(process.env.NEXT_PUBLIC_EVM_CHAIN) || "local";
 }
 
 /** Active chain, selected with NEXT_PUBLIC_EVM_CHAIN=stable|local. */
@@ -91,7 +93,7 @@ export function activeChain(): Chain {
 }
 
 export function launchpadAddress(): `0x${string}` {
-  const env = process.env.NEXT_PUBLIC_LAUNCHPAD_ADDRESS?.trim();
+  const env = cleanEnv(process.env.NEXT_PUBLIC_LAUNCHPAD_ADDRESS);
   if (env && env.startsWith("0x")) return env as `0x${string}`;
   const deployment = DEPLOYMENTS[chainKey()];
   if (deployment) return deployment.launchpad;
@@ -102,7 +104,7 @@ export function launchpadAddress(): `0x${string}` {
 
 /** StableRouter — the USDT0<->token swap helper the trade widgets use. */
 export function routerAddress(): `0x${string}` {
-  const env = process.env.NEXT_PUBLIC_ROUTER_ADDRESS?.trim();
+  const env = cleanEnv(process.env.NEXT_PUBLIC_ROUTER_ADDRESS);
   if (env && env.startsWith("0x")) return env as `0x${string}`;
   const deployment = DEPLOYMENTS[chainKey()];
   if (deployment) return deployment.router;
@@ -113,7 +115,7 @@ export function routerAddress(): `0x${string}` {
 
 /** Canonical ERC20 USDT0 (6 decimals) — the quote side of every pool. */
 export function usdt0Address(): `0x${string}` {
-  const env = process.env.NEXT_PUBLIC_USDT0_ADDRESS?.trim();
+  const env = cleanEnv(process.env.NEXT_PUBLIC_USDT0_ADDRESS);
   if (env && env.startsWith("0x")) return env as `0x${string}`;
   const deployment = DEPLOYMENTS[chainKey()];
   if (deployment) return deployment.usdt0;
@@ -125,7 +127,7 @@ export function usdt0Address(): `0x${string}` {
 
 /** First block the indexer scans on a fresh database. */
 export function indexerStartBlock(): string | undefined {
-  const env = process.env.EVM_INDEXER_START_BLOCK?.trim();
+  const env = cleanEnv(process.env.EVM_INDEXER_START_BLOCK);
   if (env) return env;
   return DEPLOYMENTS[chainKey()]?.startBlock;
 }

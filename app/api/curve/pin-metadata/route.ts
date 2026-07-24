@@ -2,9 +2,11 @@ import { randomBytes } from "crypto";
 
 import { NextResponse } from "next/server";
 
+import { cleanEnv } from "@/lib/cleanEnv";
+
 export const runtime = "nodejs";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://qorb.fun";
+const SITE_URL = cleanEnv(process.env.NEXT_PUBLIC_SITE_URL) ?? "https://qorb.fun";
 
 /**
  * Pins the token's image + metadata JSON to IPFS (Pinata) for an EVM curve launch.
@@ -57,7 +59,7 @@ async function pinJson(
 
 export async function POST(req: Request) {
   try {
-    const jwt = process.env.PINATA_JWT?.trim();
+    const jwt = cleanEnv(process.env.PINATA_JWT);
     const form = await req.formData();
 
     const text = (key: string, max = 500) =>

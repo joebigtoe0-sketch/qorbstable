@@ -1,3 +1,4 @@
+import { cleanEnv } from "@/lib/cleanEnv";
 import { GRADUATION_USD } from "@/lib/evm/curveMath";
 import type { CurveTokenJson, CurveTradeJson } from "@/types/curve";
 
@@ -6,7 +7,7 @@ const START_PRICE = 4.03e-6;
 
 const FLAVORS = ["standard", "lpGrow", "superLp"] as const;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://qorb.fun";
+const SITE_URL = cleanEnv(process.env.NEXT_PUBLIC_SITE_URL) ?? "https://qorb.fun";
 
 /**
  * Convert a curve_tokens row (pg or PGlite) into the API DTO. Legacy column

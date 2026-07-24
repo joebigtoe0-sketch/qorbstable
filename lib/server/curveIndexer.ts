@@ -17,6 +17,7 @@ import {
   isEvmConfigured,
   launchpadAddress,
 } from "@/lib/evm/chains";
+import { cleanEnv } from "@/lib/cleanEnv";
 import { curveDb, getMeta, setMeta, type CurveDb } from "@/lib/server/curveDb";
 import { verifyTokenSource } from "@/lib/server/tokenVerifier";
 
@@ -39,13 +40,13 @@ import { verifyTokenSource } from "@/lib/server/tokenVerifier";
 
 const POLL_MS = 3_000;
 // rpc.stable.xyz caps eth_getLogs at 500 blocks; anvil doesn't care.
-const CHUNK = BigInt(process.env.EVM_INDEXER_CHUNK?.trim() || "450");
+const CHUNK = BigInt(cleanEnv(process.env.EVM_INDEXER_CHUNK) ?? "450");
 // Never indexed and scrubbed from an existing DB — deployment smoke-test
 // coins that shouldn't clutter the board. Extend via HIDDEN_TOKENS env
 // (comma-separated addresses).
 const HIDDEN_TOKENS = new Set(
   (
-    (process.env.HIDDEN_TOKENS ?? "") +
+    (cleanEnv(process.env.HIDDEN_TOKENS) ?? "") +
     ",0x9a0cf14a288c2fa34354403c4a775eb816ba5b1e" // First Light (mainnet smoke test)
   )
     .toLowerCase()
@@ -84,7 +85,7 @@ type PoolInfo = { token: string; isToken0: boolean; flavor: number };
 function ipfsToHttp(uri: string): string {
   if (!uri.startsWith("ipfs://")) return uri;
   const gateway =
-    process.env.PINATA_GATEWAY?.trim().replace(/\/$/, "") ??
+    cleanEnv(process.env.PINATA_GATEWAY)?.replace(/\/$/, "") ??
     "https://gateway.pinata.cloud";
   return `${gateway}/ipfs/${uri.slice("ipfs://".length)}`;
 }
@@ -583,10 +584,10 @@ class CurveIndexer {
 
   /** Super LP keeper: crank locker.collect() when enough buy tax accumulated. */
   private async maybeCrank(db: CurveDb): Promise<void> {
-    const pk = process.env.KEEPER_PRIVATE_KEY?.trim();
+    const pk = cleanEnv(process.env.KEEPER_PRIVATE_KEY);
     if (!pk) return;
     const minTax = BigInt(
-      process.env.KEEPER_MIN_TAX_TOKENS?.trim() || "1000000000000000000000000" // 1M tokens
+      cleanEnv(process.env.KEEPER_MIN_TAX_TOKENS) ?? "1000000000000000000000000" // 1M tokens
     );
     const locker = await this.lockerAddress();
 
@@ -636,7 +637,7 @@ const g = globalThis as unknown as { __stblCurveIndexer?: boolean };
 
 export function startCurveIndexer(): void {
   if (g.__stblCurveIndexer) return;
-  if (process.env.EVM_INDEXER_DISABLED === "1") {
+  if (cleanEnv(process.env.EVM_INDEXER_DISABLED) === "1") {
     console.log("[curve-indexer] disabled via EVM_INDEXER_DISABLED");
     return;
   }

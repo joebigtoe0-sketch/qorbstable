@@ -1,5 +1,6 @@
 import path from "path";
 
+import { cleanEnv } from "@/lib/cleanEnv";
 import { stablepadDataDir } from "@/lib/server/stablepadDataPath";
 
 /**
@@ -93,7 +94,7 @@ const MIGRATIONS = [
 ];
 
 async function createDb(): Promise<CurveDb> {
-  let url = process.env.DATABASE_URL?.trim();
+  let url = cleanEnv(process.env.DATABASE_URL);
   // An unresolved Railway reference (the literal "${{Postgres.DATABASE_URL}}"
   // when no Postgres service exists) is not a connection string — falling
   // back to PGlite keeps the app alive instead of crashing every query.

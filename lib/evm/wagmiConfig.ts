@@ -4,10 +4,11 @@ import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { createConfig, http } from "wagmi";
 import { injected } from "wagmi/connectors";
 
+import { cleanEnv } from "@/lib/cleanEnv";
 import { activeChain } from "@/lib/evm/chains";
 
 const chain = activeChain();
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim();
+const projectId = cleanEnv(process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID);
 
 /**
  * With a WalletConnect project id we get the full RainbowKit wallet list;
