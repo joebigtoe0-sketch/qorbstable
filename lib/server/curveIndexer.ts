@@ -40,6 +40,19 @@ import { verifyTokenSource } from "@/lib/server/tokenVerifier";
 const POLL_MS = 3_000;
 // rpc.stable.xyz caps eth_getLogs at 500 blocks; anvil doesn't care.
 const CHUNK = BigInt(process.env.EVM_INDEXER_CHUNK?.trim() || "450");
+// Never indexed and scrubbed from an existing DB — deployment smoke-test
+// coins that shouldn't clutter the board. Extend via HIDDEN_TOKENS env
+// (comma-separated addresses).
+const HIDDEN_TOKENS = new Set(
+  (
+    (process.env.HIDDEN_TOKENS ?? "") +
+    ",0x9a0cf14a288c2fa34354403c4a775eb816ba5b1e" // First Light (mainnet smoke test)
+  )
+    .toLowerCase()
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+);
 const ZERO = "0x0000000000000000000000000000000000000000";
 const CRANK_COOLDOWN_MS = 5 * 60_000;
 
@@ -172,6 +185,13 @@ class CurveIndexer {
 
   private async load(db: CurveDb): Promise<void> {
     if (this.loaded) return;
+    // Scrub hidden coins that made it into the DB before they were listed.
+    for (const hidden of HIDDEN_TOKENS) {
+      await db.query("DELETE FROM curve_tokens WHERE address = $1", [hidden]);
+      await db.query("DELETE FROM curve_trades WHERE token = $1", [hidden]);
+      await db.query("DELETE FROM curve_holders WHERE token = $1", [hidden]);
+      await db.query("DELETE FROM curve_fee_events WHERE token = $1", [hidden]);
+    }
     const res = await db.query<{
       address: string;
       pool: string;
@@ -345,7 +365,7 @@ class CurveIndexer {
   private async onTokenLaunched(db: CurveDb, log: AnyLog): Promise<void> {
     const args = log.args ?? {};
     const token = (args.token as string).toLowerCase();
-    if (this.tokens.has(token)) return;
+    if (this.tokens.has(token) || HIDDEN_TOKENS.has(token)) return;
     const pool = (args.pool as string).toLowerCase();
     const flavor = Number(args.flavor ?? 0);
     const ts = await this.tsOf(log.blockNumber ?? 0n);
