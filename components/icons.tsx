@@ -3,15 +3,6 @@
 
 type IconProps = { className?: string };
 
-export function MagnetIcon({ className = "h-4 w-4" }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-      <path d="M4.5 12.5V7a3.5 3.5 0 0 1 7 0v5.5" />
-      <path d="M3.2 10.5h2.6M10.2 10.5h2.6" strokeWidth="2.2" />
-    </svg>
-  );
-}
-
 export function TaxIcon({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
@@ -109,6 +100,14 @@ export function CoinIcon({ className = "h-4 w-4" }: IconProps) {
     <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
       <circle cx="8" cy="8" r="6" />
       <path d="M8 4.8v6.4M10.2 6.4c0-.9-1-1.6-2.2-1.6S5.8 5.5 5.8 6.4 6.8 8 8 8s2.2.7 2.2 1.6-1 1.6-2.2 1.6-2.2-.7-2.2-1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function PlusIcon({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+      <path d="M8 3v10M3 8h10" />
     </svg>
   );
 }

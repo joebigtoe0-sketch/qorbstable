@@ -13,7 +13,7 @@ import {
   useWriteContract,
 } from "wagmi";
 
-import { ArrowRightIcon, LockIcon, MagnetIcon } from "@/components/icons";
+import { ArrowRightIcon, CoinIcon, LockIcon, PlusIcon } from "@/components/icons";
 import { erc20Abi } from "@/lib/evm/abi/erc20";
 import { stableLaunchpadAbi } from "@/lib/evm/abi/stableLaunchpad";
 import {
@@ -53,7 +53,7 @@ export function CurveLaunchForm() {
   if (!isEvmConfigured()) {
     return (
       <div className="rounded-2xl border border-dashed border-stbl-700 bg-stbl-900/40 px-6 py-16 text-center">
-        <MagnetIcon className="mx-auto h-10 w-10 text-stbl-shell/30" />
+        <CoinIcon className="mx-auto h-10 w-10 text-stbl-shell/30" />
         <p className="mt-3 font-display text-lg font-extrabold lowercase text-stbl-shell">
           launches aren&apos;t configured on this chain yet
         </p>
@@ -297,7 +297,7 @@ function LaunchForm() {
       {/* form header */}
       <div className="flex items-center gap-3 border-b border-stbl-800 bg-stbl-900/70 px-5 py-4">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-stbl-yolk/15 text-stbl-yolk">
-          <MagnetIcon className="h-4.5 w-4.5" />
+          <PlusIcon className="h-4.5 w-4.5" />
         </span>
         <div>
           <p className="font-display text-sm font-extrabold lowercase text-stbl-shell">
@@ -322,7 +322,7 @@ function LaunchForm() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   maxLength={64}
-                  placeholder="Magnet Money"
+                  placeholder="Turbo Turtle"
                 />
               </div>
               <div>
@@ -332,7 +332,7 @@ function LaunchForm() {
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
                   maxLength={12}
-                  placeholder="MAGNET"
+                  placeholder="TURBO"
                 />
               </div>
             </div>

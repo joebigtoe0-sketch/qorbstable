@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { CurveTokenCard } from "@/components/curve/CurveTokenCard";
 import { useCurrency } from "@/components/curve/CurrencyProvider";
-import { CrownIcon, GridIcon, MagnetIcon, RowsIcon } from "@/components/icons";
+import { CoinIcon, CrownIcon, GridIcon, RowsIcon } from "@/components/icons";
 import { ipfsToHttp } from "@/lib/evm/ipfs";
 import type { CurveTokenJson } from "@/types/curve";
 
@@ -221,7 +221,7 @@ export function CurveExplorer() {
         </div>
       ) : tokens.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-stbl-700 bg-stbl-800/30 px-6 py-14 text-center">
-          <MagnetIcon className="mx-auto h-10 w-10 text-stbl-shell/30" />
+          <CoinIcon className="mx-auto h-10 w-10 text-stbl-shell/30" />
           <p className="mt-3 font-display text-lg font-extrabold lowercase text-stbl-shell">
             nothing here yet
           </p>

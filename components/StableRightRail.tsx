@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useCurrency } from "@/components/curve/CurrencyProvider";
 import { ipfsToHttp } from "@/lib/evm/ipfs";
-import { MagnetIcon } from "@/components/icons";
+import { CoinIcon } from "@/components/icons";
 import type { CurveTradeJson } from "@/types/curve";
 
 type Stats = { live: number; graduated: number; volume24hEth: number };
@@ -79,7 +79,7 @@ export function StableRightRail() {
       {trades.length === 0 ? (
         <div className="mt-3 rounded-xl border border-dashed border-stbl-straw/40 bg-stbl-surface-warm/30 px-3 py-6 text-center text-xs leading-relaxed text-stbl-wood/70 dark:border-stbl-700 dark:bg-stbl-800/40 dark:text-stbl-shell/55">
           <p className="text-2xl" aria-hidden>
-            <MagnetIcon className="mx-auto h-8 w-8 text-stbl-shell/30" />
+            <CoinIcon className="mx-auto h-8 w-8 text-stbl-shell/30" />
           </p>
           <p className="mt-2">buys and sells stream here the moment coins start trading.</p>
         </div>

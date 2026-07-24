@@ -10,7 +10,7 @@ import { CurveHolders } from "@/components/curve/CurveHolders";
 import { CurveTradesFeed } from "@/components/curve/CurveTradesFeed";
 import { CurveTradeWidget } from "@/components/curve/CurveTradeWidget";
 import { useCurrency } from "@/components/curve/CurrencyProvider";
-import { MagnetIcon, XIcon } from "@/components/icons";
+import { CoinIcon, XIcon } from "@/components/icons";
 import { activeChain } from "@/lib/evm/chains";
 import { ipfsToHttp } from "@/lib/evm/ipfs";
 import type { CurveHolderJson, CurveTokenJson } from "@/types/curve";
@@ -105,7 +105,7 @@ export function CoinPageClient({ address }: { address: string }) {
   if (notFound && !graceOver) {
     return (
       <div className="rounded-2xl border border-dashed border-stbl-straw/50 bg-stbl-surface-warm/30 px-6 py-16 text-center dark:border-stbl-700 dark:bg-stbl-800/30">
-        <MagnetIcon className="mx-auto h-10 w-10 animate-bounce text-stbl-yolk/60" />
+        <CoinIcon className="mx-auto h-10 w-10 animate-bounce text-stbl-yolk/60" />
         <p className="mt-3 font-display text-lg font-extrabold lowercase text-stbl-ink dark:text-stbl-shell">
           settling in…
         </p>
@@ -120,7 +120,7 @@ export function CoinPageClient({ address }: { address: string }) {
   if (notFound) {
     return (
       <div className="rounded-2xl border border-dashed border-stbl-straw/50 bg-stbl-surface-warm/30 px-6 py-16 text-center dark:border-stbl-700 dark:bg-stbl-800/30">
-        <MagnetIcon className="mx-auto h-10 w-10 text-stbl-shell/30" />
+        <CoinIcon className="mx-auto h-10 w-10 text-stbl-shell/30" />
         <p className="mt-3 font-display text-lg font-extrabold lowercase text-stbl-ink dark:text-stbl-shell">
           coin not found
         </p>
