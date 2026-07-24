@@ -92,13 +92,27 @@ Then:
 
 1. Record every printed address + deploy block in `lib/evm/chains.ts`
    (`DEPLOYMENTS.stable`: launchpad, router, usdt0, startBlock) and in the
-   table above.
+   table above. Push — Railway redeploys from main.
 2. Rebuild ABIs if contracts changed: `npm run evm:abi`.
-3. Verify sources on stablescan (Etherscan-style API).
-4. Set Railway env: `NEXT_PUBLIC_EVM_CHAIN=stable`, `DATABASE_URL`,
-   `PINATA_JWT`, `PINATA_GATEWAY`, `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`,
-   `NEXT_PUBLIC_SITE_URL=https://thestable.fun`, optional
-   `KEEPER_PRIVATE_KEY`.
+3. Verify the four contracts on stablescan (Etherscan V2 API, chainid 988):
+
+   ```bash
+   forge verify-contract <LAUNCHPAD> src/StableLaunchpad.sol:StableLaunchpad \
+     --verifier-url "https://api.etherscan.io/v2/api?chainid=988" \
+     --etherscan-api-key $ETHERSCAN_API_KEY \
+     --constructor-args $(cast abi-encode "c(address,address,address)" <FACTORY> <USDT0> <FEE_RECIPIENT>)
+   # repeat for StableLocker (args: launchpad), StableRouter (args: factory, usdt0)
+   ```
+
+   Launched tokens verify themselves automatically (lib/server/tokenVerifier.ts).
+4. Set Railway env (Variables tab):
+   - `NEXT_PUBLIC_EVM_CHAIN=stable`
+   - `DATABASE_URL` (add Railway's Postgres plugin; PGlite fallback is dev-only)
+   - `PINATA_JWT`, `PINATA_GATEWAY` (from local `.env` — gitignored, never committed)
+   - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (cloud.walletconnect.com project)
+   - `NEXT_PUBLIC_SITE_URL=https://qorb.fun`
+   - `ETHERSCAN_API_KEY` (auto-verification of launched tokens)
+   - optional `KEEPER_PRIVATE_KEY` (funded wallet; cranks Super LP collects)
 
 ## 3. Post-deploy smoke test
 
