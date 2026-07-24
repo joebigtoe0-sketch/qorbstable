@@ -93,7 +93,17 @@ const MIGRATIONS = [
 ];
 
 async function createDb(): Promise<CurveDb> {
-  const url = process.env.DATABASE_URL?.trim();
+  let url = process.env.DATABASE_URL?.trim();
+  // An unresolved Railway reference (the literal "${{Postgres.DATABASE_URL}}"
+  // when no Postgres service exists) is not a connection string — falling
+  // back to PGlite keeps the app alive instead of crashing every query.
+  if (url && url.includes("${{")) {
+    console.warn(
+      `[curve-db] DATABASE_URL is an unresolved template (${url}) — add the ` +
+        "Postgres service in Railway; using embedded PGlite until then"
+    );
+    url = undefined;
+  }
   if (url) {
     const { Pool } = await import("pg");
     // Timeouts everywhere: a silently hung query must become a loud error the
