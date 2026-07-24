@@ -31,7 +31,7 @@ export function stablepadDataPath(filename: string): string {
       const pkg = JSON.parse(
         fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")
       ) as { name?: string };
-      if (pkg.name === "stablepad") return directly;
+      if (pkg.name === "qorb" || pkg.name === "stablepad") return directly;
     } catch {
       /* no package.json at cwd */
     }

@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 
 import { cleanEnv } from "@/lib/cleanEnv";
@@ -106,6 +107,7 @@ async function createDb(): Promise<CurveDb> {
     url = undefined;
   }
   if (url) {
+    console.log(`[curve-db] using Postgres (${url.replace(/\/\/[^@]*@/, "//***@")})`);
     const { Pool } = await import("pg");
     // Timeouts everywhere: a silently hung query must become a loud error the
     // logs can show, never an indexer that freezes without a trace.
@@ -128,6 +130,10 @@ async function createDb(): Promise<CurveDb> {
 
   const { PGlite } = await import("@electric-sql/pglite");
   const dataDir = path.join(stablepadDataDir(), "curve-pglite");
+  // PGlite's nodefs mkdir is not recursive — a fresh container (Railway) has
+  // no .data parent yet and would crash every query with ENOENT.
+  fs.mkdirSync(dataDir, { recursive: true });
+  console.log(`[curve-db] using embedded PGlite at ${dataDir} (ephemeral on hosted deploys)`);
   const pg = new PGlite(dataDir);
   return {
     async query(text, params) {
